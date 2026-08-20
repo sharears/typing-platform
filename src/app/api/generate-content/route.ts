@@ -1,5 +1,7 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
+import { JSDOM } from "jsdom";
+import { Readability } from "@mozilla/readability";
 
 export async function POST(req: Request) {
   try {
@@ -51,9 +53,6 @@ export async function POST(req: Request) {
             );
           }
 
-          const { JSDOM } = require("jsdom");
-          const { Readability } = require("@mozilla/readability");
-
           const doc = new JSDOM(html, { url: topic });
           
           // Pre-process DOM to remove common junk like image captions, credits, and interactive buttons
@@ -98,9 +97,10 @@ export async function POST(req: Request) {
           }
           
           title = article.title || "Article Extract";
-        } catch (e) {
+        } catch (e: any) {
+          console.error("URL Fetch/Parse Error:", e);
           return new Response(
-            JSON.stringify({ error: "Failed to fetch content from the provided URL. Please ensure it is a valid and accessible link." }),
+            JSON.stringify({ error: `Failed to fetch content from the provided URL. Please ensure it is a valid and accessible link. Details: ${e.message}` }),
             { status: 400 }
           );
         }
