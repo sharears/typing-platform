@@ -1,66 +1,63 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+"use client";
+
+import { signIn, useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function Home() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push("/dashboard");
+    }
+  }, [status, router]);
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>To get started, edit the page.tsx file.</h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "60vh", textAlign: "center" }}>
+      <h1 style={{ fontSize: "3rem", marginBottom: "16px" }} className="gradient-text">
+        Learn Anything by Typing
+      </h1>
+      <p style={{ fontSize: "1.25rem", color: "var(--untyped)", maxWidth: "600px", marginBottom: "40px" }}>
+        Describe a topic or provide a link, and our AI will generate a custom learning summary. 
+        Type out the summary to improve your typing speed while absorbing the knowledge!
+      </p>
+      
+      {status === "unauthenticated" && (
+        <div className="glass-panel" style={{ display: "flex", flexDirection: "column", gap: "20px", width: "100%", maxWidth: "400px" }}>
+          <h2>Sign In</h2>
+          <p style={{ fontSize: "0.9rem", color: "var(--untyped)" }}>Use any email and password to create a mock account.</p>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              const email = (e.currentTarget.elements.namedItem("email") as HTMLInputElement).value;
+              const password = (e.currentTarget.elements.namedItem("password") as HTMLInputElement).value;
+              const apiKey = (e.currentTarget.elements.namedItem("apiKey") as HTMLInputElement).value;
+              signIn("credentials", { email, password, apiKey, callbackUrl: "/dashboard" });
+            }}
+            style={{ display: "flex", flexDirection: "column", gap: "16px" }}
           >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <input name="email" type="email" placeholder="Email Address" required className="input-field" />
+            <input name="password" type="password" placeholder="Password" required className="input-field" />
+            <input name="apiKey" type="password" placeholder="Gemini API Key (Optional for existing users)" className="input-field" />
+            <button type="submit" className="btn-primary">Sign In / Register</button>
+          </form>
         </div>
-      </main>
+      )}
+
+      {status === "loading" && <p>Loading...</p>}
+      
+      {status === "authenticated" && (
+        <div style={{ display: "flex", gap: "16px" }}>
+          <button onClick={() => router.push("/dashboard")} className="btn-primary">
+            Go to Dashboard
+          </button>
+          <button onClick={() => signOut()} className="btn-secondary">
+            Sign Out
+          </button>
+        </div>
+      )}
     </div>
   );
 }
