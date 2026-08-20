@@ -26,7 +26,7 @@ export default function Home() {
       {status === "unauthenticated" && (
         <div className="glass-panel" style={{ display: "flex", flexDirection: "column", gap: "20px", width: "100%", maxWidth: "400px" }}>
           <h2>Sign In</h2>
-          <p style={{ fontSize: "0.9rem", color: "var(--untyped)" }}>Use any email and password to create a mock account.</p>
+          <p style={{ fontSize: "0.9rem", color: "var(--untyped)" }}>Sign in to track your progress</p>
             <form
             onSubmit={(e) => {
               e.preventDefault();
