@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: "Learn topics by typing AI-generated summaries.",
 };
 
+import { Analytics } from '@vercel/analytics/react';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -26,6 +28,7 @@ export default function RootLayout({
             {children}
           </main>
         </Providers>
+        <Analytics />
       </body>
     </html>
   );
