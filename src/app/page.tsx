@@ -20,7 +20,7 @@ export default function Home() {
         Learn Anything by Typing
       </h1>
       <p style={{ fontSize: "1.25rem", color: "var(--untyped)", maxWidth: "600px", marginBottom: "40px" }}>
-        provide a link or material and the site will generate a simple text. Type out the text to improve your typing speed while absorbing the knowledge!
+        Provide a link or material and the site will generate a simple text. Type out the text to improve your typing speed while absorbing the knowledge!
       </p>
       
       {status === "unauthenticated" && (
