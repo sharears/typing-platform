@@ -28,19 +28,17 @@ export default function Home() {
         <div className="glass-panel" style={{ display: "flex", flexDirection: "column", gap: "20px", width: "100%", maxWidth: "400px" }}>
           <h2>Sign In</h2>
           <p style={{ fontSize: "0.9rem", color: "var(--untyped)" }}>Use any email and password to create a mock account.</p>
-          <form
+            <form
             onSubmit={(e) => {
               e.preventDefault();
               const email = (e.currentTarget.elements.namedItem("email") as HTMLInputElement).value;
               const password = (e.currentTarget.elements.namedItem("password") as HTMLInputElement).value;
-              const apiKey = (e.currentTarget.elements.namedItem("apiKey") as HTMLInputElement).value;
-              signIn("credentials", { email, password, apiKey, callbackUrl: "/dashboard" });
+              signIn("credentials", { email, password, callbackUrl: "/dashboard" });
             }}
             style={{ display: "flex", flexDirection: "column", gap: "16px" }}
           >
             <input name="email" type="email" placeholder="Email Address" required className="input-field" />
             <input name="password" type="password" placeholder="Password" required className="input-field" />
-            <input name="apiKey" type="password" placeholder="Gemini API Key (Optional for existing users)" className="input-field" />
             <button type="submit" className="btn-primary">Sign In / Register</button>
           </form>
         </div>
