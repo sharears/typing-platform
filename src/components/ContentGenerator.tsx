@@ -72,14 +72,14 @@ export function ContentGenerator({ onContentGenerated }: ContentGeneratorProps) 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
         <div>
           <label style={{ display: "block", marginBottom: "8px", color: "var(--untyped)" }}>
-            Type an URL or drag a file
+            Enter an URL
           </label>
           <input
             type="text"
             value={topic}
             onChange={(e) => setTopic(e.target.value)}
             className="input-field"
-            placeholder="Enter a topic or paste a URL..."
+            placeholder="URL"
             disabled={loading}
           />
         </div>
