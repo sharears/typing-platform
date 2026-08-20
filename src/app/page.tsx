@@ -20,8 +20,7 @@ export default function Home() {
         Learn Anything by Typing
       </h1>
       <p style={{ fontSize: "1.25rem", color: "var(--untyped)", maxWidth: "600px", marginBottom: "40px" }}>
-        Describe a topic or provide a link, and our AI will generate a custom learning summary. 
-        Type out the summary to improve your typing speed while absorbing the knowledge!
+        provide a link or material and the site will generate a simple text. Type out the text to improve your typing speed while absorbing the knowledge!
       </p>
       
       {status === "unauthenticated" && (
