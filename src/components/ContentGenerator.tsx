@@ -72,7 +72,7 @@ export function ContentGenerator({ onContentGenerated }: ContentGeneratorProps) 
       <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
         <div>
           <label style={{ display: "block", marginBottom: "8px", color: "var(--untyped)" }}>
-            Topic or URL (e.g., "Photosynthesis", "https://en.wikipedia.org/wiki/Photosynthesis")
+            Type an URL or drag a file
           </label>
           <input
             type="text"
