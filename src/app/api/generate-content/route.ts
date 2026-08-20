@@ -1,12 +1,12 @@
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/authOptions";
-import { JSDOM } from "jsdom";
-import { Readability } from "@mozilla/readability";
+import * as cheerio from "cheerio";
 
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
-    if (!session || !session.user || !session.user.id) {
+    // Relaxed session check to prevent 401s on old sessions
+    if (!session || !session.user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
     }
 
@@ -53,50 +53,41 @@ export async function POST(req: Request) {
             );
           }
 
-          const doc = new JSDOM(html, { url: topic });
+          const $ = cheerio.load(html);
           
-          // Pre-process DOM to remove common junk like image captions, credits, and interactive buttons
+          // Remove common junk
           const junkSelectors = [
-            'figcaption', 
-            'figure', 
-            '.caption', 
-            '.credit', 
-            '.image-credit',
-            '.image-caption',
-            'button', // mostly interactive junk like 'toggle caption'
-            '[aria-label*="caption"]',
-            'h1' // Removes the main title from the typing content
+            'script', 'style', 'noscript', 'iframe', 'svg',
+            'nav', 'footer', 'header', 'aside',
+            'figcaption', 'figure', '.caption', '.credit', '.image-credit', '.image-caption',
+            'button', '[aria-label*="caption"]', 'h1'
           ];
           
-          doc.window.document.querySelectorAll(junkSelectors.join(',')).forEach((el: Element) => {
-            el.remove();
+          $(junkSelectors.join(',')).remove();
+
+          // Try to get title
+          title = $('title').text() || $('meta[property="og:title"]').attr('content') || "Article Extract";
+
+          // Extract text from paragraphs and divs
+          const textBlocks: string[] = [];
+          $('p, div, h2, h3, h4, h5, h6, li, blockquote').each((_, el) => {
+            const text = $(el).text().trim();
+            if (text.length > 20) {
+              textBlocks.push(text);
+            }
           });
 
-          const reader = new Readability(doc.window.document);
-          const article = reader.parse();
+          content = textBlocks.join('\n\n');
 
-          if (!article || !article.content) {
-            return new Response(
-              JSON.stringify({ error: "Failed to extract meaningful text from this URL. Try copying the text into a .txt file instead." }),
-              { status: 400 }
-            );
+          if (!content || content.length < 50) {
+            // Fallback to body text if structured extraction fails
+            content = $('body').text() || "";
           }
-
-          // Clean up the extracted text - inject newlines for block elements to guarantee paragraph boundaries
-          let processedHtml = article.content
-            .replace(/<h1[^>]*>.*?<\/h1>/gi, '') // Remove the title that Readability forcibly injects
-            .replace(/<(p|div|h[1-6]|li|blockquote)[^>]*>/gi, '\n\n<$1>')
-            .replace(/<\/(p|div|h[1-6]|li|blockquote)>/gi, '</$1>\n\n')
-            .replace(/<br\s*\/?>/gi, '\n\n');
-            
-          const contentDom = new JSDOM(processedHtml);
-          content = contentDom.window.document.body.textContent || "";
           
           if (content.length > 50000) {
             content = content.substring(0, 50000);
           }
-          
-          title = article.title || "Article Extract";
+
         } catch (e: any) {
           console.error("URL Fetch/Parse Error:", e);
           return new Response(
