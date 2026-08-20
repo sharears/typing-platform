@@ -81,12 +81,6 @@ export const authOptions: NextAuthOptions = {
             name: user.name,
           };
         }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-        };
       }
     })
   ],
