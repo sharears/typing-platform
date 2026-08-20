@@ -55,10 +55,13 @@ export const authOptions: NextAuthOptions = {
           });
           return { id: newUser.id, email: newUser.email, name: newUser.name };
         } else {
-          // Sign in flow - look up by username (name)
+          // Sign in flow - look up by username or email
           const user = await prisma.user.findFirst({
             where: {
-              name: credentials.name
+              OR: [
+                { name: credentials.name },
+                { email: credentials.name }
+              ]
             }
           });
 

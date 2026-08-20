@@ -41,7 +41,7 @@ export default function Home() {
             }}
             style={{ display: "flex", flexDirection: "column", gap: "16px" }}
           >
-            <input name="name" type="text" placeholder="Username" required className="input-field" />
+            <input name="name" type="text" placeholder={isRegister ? "Username" : "Username or Email"} required className="input-field" />
             {isRegister && (
               <input name="email" type="email" placeholder="Email Address" required className="input-field" />
             )}
