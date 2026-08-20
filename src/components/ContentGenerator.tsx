@@ -6,6 +6,8 @@ interface ContentGeneratorProps {
   onContentGenerated: (content: string, topic: string) => void;
 }
 
+import { Readability } from "@mozilla/readability";
+
 export function ContentGenerator({ onContentGenerated }: ContentGeneratorProps) {
   const [topic, setTopic] = useState("");
   const [file, setFile] = useState<File | null>(null);
@@ -58,7 +60,72 @@ export function ContentGenerator({ onContentGenerated }: ContentGeneratorProps) 
       }
 
       const data = await res.json();
-      onContentGenerated(data.content, data.title || finalTopic);
+      
+      let finalContent = data.content;
+      let finalTitle = data.title || finalTopic;
+
+      // If the server returned raw HTML, use the browser's native DOM parser!
+      if (data.html) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(data.html, "text/html");
+        
+        // Remove interactive junk before Readability parses it
+        const junkSelectors = [
+          'figcaption', 'figure', '.caption', '.credit', '.image-credit',
+          '.image-caption', 'button', '[aria-label*="caption"]', 'h1'
+        ];
+        doc.querySelectorAll(junkSelectors.join(',')).forEach((el) => el.remove());
+
+        const reader = new Readability(doc);
+        const article = reader.parse();
+
+        if (!article || !article.content) {
+          throw new Error("Failed to extract meaningful text from this URL.");
+        }
+
+        // Clean up the extracted HTML into text
+        const processedHtml = article.content
+          .replace(/<h1[^>]*>.*?<\/h1>/gi, '')
+          .replace(/<(p|div|h[1-6]|li|blockquote)[^>]*>/gi, '\n\n<$1>')
+          .replace(/<\/(p|div|h[1-6]|li|blockquote)>/gi, '</$1>\n\n')
+          .replace(/<br\s*\/?>/gi, '\n\n');
+
+        const contentDom = parser.parseFromString(processedHtml, "text/html");
+        finalContent = contentDom.body.textContent || "";
+        finalTitle = article.title || finalTopic;
+        
+        // Normalize
+        finalContent = finalContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        finalContent = finalContent.replace(/[‘’`´]/g, "'").replace(/[“”«»]/g, '"').replace(/[–—]/g, '-').replace(/…/g, '...');
+        
+        const paragraphs = finalContent.split(/\n\s*\n+/);
+        const normalizeString = (s: string) => s.toLowerCase().replace(/[‘’`´]/g, "'").replace(/[“”«»]/g, '"').trim();
+        const titleLower = normalizeString(finalTitle);
+
+        finalContent = paragraphs
+          .map((p: string) => {
+            const text = p.trim();
+            if (!text) return "";
+            const lower = normalizeString(text);
+            
+            if (
+              lower === "hide caption" || lower === "toggle caption" || lower === "image caption" ||
+              lower === "download" || lower === "transcript" || lower === "embed" ||
+              lower.startsWith("embed <iframe") || lower.startsWith("<iframe src") ||
+              (titleLower && lower === titleLower) || (titleLower && titleLower.startsWith(lower) && lower.length > 10)
+            ) {
+              return "";
+            }
+            
+            let cleaned = text.replace(/\n/g, ' ');
+            cleaned = cleaned.replace(/[ \t]+/g, ' ');
+            return cleaned.trim();
+          })
+          .filter((p: string) => p.length > 0)
+          .join('\n');
+      }
+
+      onContentGenerated(finalContent, finalTitle);
     } catch (err: any) {
       setError(err.message || "An error occurred");
     } finally {

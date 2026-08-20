@@ -53,40 +53,8 @@ export async function POST(req: Request) {
             );
           }
 
-          const $ = cheerio.load(html);
-          
-          // Remove common junk
-          const junkSelectors = [
-            'script', 'style', 'noscript', 'iframe', 'svg',
-            'nav', 'footer', 'header', 'aside',
-            'figcaption', 'figure', '.caption', '.credit', '.image-credit', '.image-caption',
-            'button', '[aria-label*="caption"]', 'h1'
-          ];
-          
-          $(junkSelectors.join(',')).remove();
-
-          // Try to get title
-          title = $('title').text() || $('meta[property="og:title"]').attr('content') || "Article Extract";
-
-          // Extract text from paragraphs and divs
-          const textBlocks: string[] = [];
-          $('p, div, h2, h3, h4, h5, h6, li, blockquote').each((_, el) => {
-            const text = $(el).text().trim();
-            if (text.length > 20) {
-              textBlocks.push(text);
-            }
-          });
-
-          content = textBlocks.join('\n\n');
-
-          if (!content || content.length < 50) {
-            // Fallback to body text if structured extraction fails
-            content = $('body').text() || "";
-          }
-          
-          if (content.length > 50000) {
-            content = content.substring(0, 50000);
-          }
+          // Return the raw HTML to the client for native DOM parsing!
+          return new Response(JSON.stringify({ html, isUrl: true }), { status: 200 });
 
         } catch (e: any) {
           console.error("URL Fetch/Parse Error:", e);
