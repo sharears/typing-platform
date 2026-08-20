@@ -19,40 +19,67 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         name: { label: "Username", type: "text" },
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
+        isRegister: { label: "Is Register", type: "text" }
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
+        if (!credentials?.name || !credentials?.password) {
           return null;
         }
 
-        const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email
-          }
-        });
+        const isRegister = credentials.isRegister === "true";
 
-        if (!user || !user.password) {
-          // New user registration
+        if (isRegister) {
+          if (!credentials.email) return null;
+          
+          // Check if username or email already exists
+          const existingUser = await prisma.user.findFirst({
+            where: {
+              OR: [
+                { email: credentials.email },
+                { name: credentials.name }
+              ]
+            }
+          });
+          
+          if (existingUser) return null; // Can't register if name/email taken
+
           const hashedPassword = await bcrypt.hash(credentials.password, 10);
           const newUser = await prisma.user.create({
             data: {
               email: credentials.email,
-              name: credentials.name || credentials.email.split("@")[0],
+              name: credentials.name,
               password: hashedPassword,
               apiKey: null
             }
           });
           return { id: newUser.id, email: newUser.email, name: newUser.name };
-        }
+        } else {
+          // Sign in flow - look up by username (name)
+          const user = await prisma.user.findFirst({
+            where: {
+              name: credentials.name
+            }
+          });
 
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
+          if (!user || !user.password) {
+            return null;
+          }
 
-        if (!isPasswordValid) {
-          return null;
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            user.password
+          );
+
+          if (!isPasswordValid) {
+            return null;
+          }
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+          };
         }
 
         return {
