@@ -30,12 +30,14 @@ export default function Home() {
             <form
             onSubmit={(e) => {
               e.preventDefault();
+              const name = (e.currentTarget.elements.namedItem("name") as HTMLInputElement).value;
               const email = (e.currentTarget.elements.namedItem("email") as HTMLInputElement).value;
               const password = (e.currentTarget.elements.namedItem("password") as HTMLInputElement).value;
-              signIn("credentials", { email, password, callbackUrl: "/dashboard" });
+              signIn("credentials", { name, email, password, callbackUrl: "/dashboard" });
             }}
             style={{ display: "flex", flexDirection: "column", gap: "16px" }}
           >
+            <input name="name" type="text" placeholder="Username (Optional for existing users)" className="input-field" />
             <input name="email" type="email" placeholder="Email Address" required className="input-field" />
             <input name="password" type="password" placeholder="Password" required className="input-field" />
             <button type="submit" className="btn-primary">Sign In / Register</button>

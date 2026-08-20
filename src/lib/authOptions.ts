@@ -17,9 +17,9 @@ export const authOptions: NextAuthOptions = {
     CredentialsProvider({
       name: "Credentials",
       credentials: {
+        name: { label: "Username", type: "text" },
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
-        apiKey: { label: "Gemini API Key", type: "password" }
+        password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -38,9 +38,9 @@ export const authOptions: NextAuthOptions = {
           const newUser = await prisma.user.create({
             data: {
               email: credentials.email,
-              name: credentials.email.split("@")[0],
+              name: credentials.name || credentials.email.split("@")[0],
               password: hashedPassword,
-              apiKey: credentials.apiKey || null
+              apiKey: null
             }
           });
           return { id: newUser.id, email: newUser.email, name: newUser.name };
@@ -53,14 +53,6 @@ export const authOptions: NextAuthOptions = {
 
         if (!isPasswordValid) {
           return null;
-        }
-
-        // Update API key if the user provided one during sign-in
-        if (credentials.apiKey && credentials.apiKey !== user.apiKey) {
-          await prisma.user.update({
-            where: { id: user.id },
-            data: { apiKey: credentials.apiKey }
-          });
         }
 
         return {
